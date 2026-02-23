@@ -1,4 +1,3 @@
-version: '3'
 services:
   zookeeper:
     image: zookeeper:3.4
@@ -19,6 +18,62 @@ services:
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
+  okr-service:
+    build:
+      context: .
+      dockerfile: okr-service/Dockerfile
+    image: openokr/okr-service:latest
+    container_name: okr-service
+    ports:
+      - "20254:20254"
+    depends_on:
+      - zookeeper
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/okr_dev
+      SPRING_DATASOURCE_USERNAME: okr_dev
+      SPRING_DATASOURCE_PASSWORD: okr_dev
+      FRAMEWORK_DUBBO_REGISTRY1_ADDRESS: zookeeper://zookeeper:2181
+      JAVA_OPTS: "-Xms128m -Xmx1024m"
+    restart: unless-stopped
+
+  okr-web:
+    build:
+      context: .
+      dockerfile: okr-web/Dockerfile
+    image: openokr/okr-web:latest
+    container_name: okr-web
+    ports:
+      - "8892:8892"
+    depends_on:
+      - okr-service
+      - zookeeper
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      FRAMEWORK_DUBBO_REGISTRY1_ADDRESS: zookeeper://zookeeper:2181
+      JAVA_OPTS: "-Xms128m -Xmx512m"
+    restart: unless-stopped
+
+  okr-m-web:
+    build:
+      context: .
+      dockerfile: okr-m-web/Dockerfile
+    image: openokr/okr-m-web:latest
+    container_name: okr-m-web
+    ports:
+      - "8893:8893"
+    depends_on:
+      - okr-web
+      - zookeeper
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      FRAMEWORK_DUBBO_REGISTRY1_ADDRESS: zookeeper://zookeeper:2181
+      JAVA_OPTS: "-Xms128m -Xmx512m"
+    restart: unless-stopped
 
 volumes:
   postgres-data:

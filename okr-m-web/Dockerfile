@@ -1,8 +1,12 @@
-FROM openjdk:7u121-jre
+FROM maven:3.9.6-openjdk-8 AS build
+WORKDIR /workspace
+COPY . .
+RUN mvn -pl okr-m-web -am -DskipTests package
 
-ENV PROJECT_NAME okr-m-web
-ENV DEPLOY_DIR /data/webroot/okr
-#ENV VM_OPTION "-XX:MaxPermSize=256m -Xmx512m"
-RUN mkdir -p ${DEPLOY_DIR}
-COPY ./target/${PROJECT_NAME}.jar ${DEPLOY_DIR}/${PROJECT_NAME}.jar
-ENTRYPOINT java -jar -XX:MaxPermSize=256m -Xmx512m -XX:OnOutOfMemoryError="kill -9 %p" ${DEPLOY_DIR}/${PROJECT_NAME}.jar
+FROM openjdk:8-jre
+WORKDIR /app
+COPY --from=build /workspace/okr-m-web/target/okr-m-web.jar /app/okr-m-web.jar
+
+ENV JAVA_OPTS="-XX:MaxPermSize=256m -Xms128m -Xmx512m"
+EXPOSE 8893
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -XX:OnOutOfMemoryError=\"kill -9 %p\" -jar /app/okr-m-web.jar"]

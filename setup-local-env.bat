@@ -20,21 +20,28 @@ echo 1. Add Zookeeper and PostgreSQL host mappings to hosts file
 echo 2. Check Docker status
 echo.
 
-set "HOSTS_FILE=C:\Windows\System32\drivers\etc\hosts"
+set "HOSTS_FILE=%SystemRoot%\System32\drivers\etc\hosts"
+
+if not exist "%HOSTS_FILE%" (
+    echo [ERROR] Hosts file not found: %HOSTS_FILE%
+    echo Please ensure you are running on a standard Windows installation.
+    pause
+    exit /b 1
+)
 
 REM Check if entries already exist
-findstr /C:"zkserver1" %HOSTS_FILE% >nul 2>&1
+findstr /C:"zkserver1" "%HOSTS_FILE%" >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo Adding zkserver1 to hosts file...
-    echo 127.0.0.1 zkserver1 >> %HOSTS_FILE%
+    echo 127.0.0.1 zkserver1 >> "%HOSTS_FILE%"
 ) else (
     echo zkserver1 already exists in hosts file.
 )
 
-findstr /C:"pgserver" %HOSTS_FILE% >nul 2>&1
+findstr /C:"pgserver" "%HOSTS_FILE%" >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo Adding pgserver to hosts file...
-    echo 127.0.0.1 pgserver >> %HOSTS_FILE%
+    echo 127.0.0.1 pgserver >> "%HOSTS_FILE%"
 ) else (
     echo pgserver already exists in hosts file.
 )

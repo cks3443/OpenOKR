@@ -1,13 +1,12 @@
-FROM openjdk:8u171-jre
+FROM maven:3.9.6-eclipse-temurin-8 AS build
+WORKDIR /workspace
+COPY . .
+RUN mvn -pl okr-service -am -DskipTests package
 
-ENV USERNAME deploy
-RUN useradd -ms /bin/bash ${USERNAME}
-USER ${USERNAME}
+FROM eclipse-temurin:8-jre
+WORKDIR /app
+COPY --from=build /workspace/okr-service/target/okr-service.jar /app/okr-service.jar
 
-ENV PROJECT_NAME okr-service
-ENV DEPLOY_DIR /home/${USERNAME}/service
-ENV VM_OPTION "-XX:MaxPermSize=256m -Xms128m -Xmx2g"
-
-RUN mkdir -p ${DEPLOY_DIR}/${PROJECT_NAME}
-COPY ./target/${PROJECT_NAME}/ ${DEPLOY_DIR}/${PROJECT_NAME}
-ENTRYPOINT java  ${VM_OPTION}  -XX:OnOutOfMemoryError="kill -9 %p" -cp ${DEPLOY_DIR}/${PROJECT_NAME} org.springframework.boot.loader.JarLauncher
+ENV JAVA_OPTS="-XX:MaxPermSize=256m -Xms128m -Xmx2g"
+EXPOSE 20254
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -XX:OnOutOfMemoryError=\"kill -9 %p\" -jar /app/okr-service.jar --framework.dubbo.protocol.port=20254"]
