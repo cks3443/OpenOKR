@@ -236,6 +236,12 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>1.46</version>
+        </dependency>
         <!--ldap 依赖-->
         <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-ldap -->
         <dependency>
